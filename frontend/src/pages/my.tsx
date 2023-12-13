@@ -3,6 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import MintModal from "../components/MintModal";
 import { NftMetadata, OutletContext } from "../types";
 import axios from "axios";
+import MyNftCard from "../components/MyNftCard";
 
 const My: FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -38,7 +39,7 @@ const My: FC = () => {
 
         const response = await axios.get(metadataURI);
 
-        temp.push(response.data);
+        temp.push({ ...response.data, tokenId: Number(tokenId) });
       }
 
       setMetadataArray(temp);
@@ -66,10 +67,12 @@ const My: FC = () => {
         </div>
         <ul className="p-8 grid grid-cols-2 gap-8">
           {metadataArray?.map((v, i) => (
-            <li key={i}>
-              <img src={v.image} alt={v.name} />
-              <div className="font-semibold mt-1">{v.name}</div>
-            </li>
+            <MyNftCard
+              key={i}
+              image={v.image}
+              name={v.name}
+              tokenId={v.tokenId!}
+            />
           ))}
         </ul>
       </div>
