@@ -32,13 +32,13 @@ const Layout: FC = () => {
     setMintNftContract(
       new web3.eth.Contract(
         mintNftAbi,
-        "0x1e3762e95365395f862241e7a4099b94bed2afaf"
+        "0x8bcc77d4cbf688e710c54678b5e4e4c7d70e9b0e"
       )
     );
   }, [web3]);
 
   return (
-    <div className="bg-red-100 min-h-screen max-w-screen-md mx-auto">
+    <div className="bg-red-100 min-h-screen max-w-screen-md mx-auto flex flex-col">
       <Header account={account} setAccount={setAccount} />
       <Outlet context={{ account, web3, mintNftContract }} />
     </div>
