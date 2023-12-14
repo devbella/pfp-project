@@ -1,47 +1,49 @@
 import { FC, useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import MintModal from "../components/MintModal";
 import { NftMetadata, OutletContext } from "../types";
 import axios from "axios";
-import MyNftCard from "../components/MyNftCard";
+import NftCard from "../components/NftCard";
 
-const My: FC = () => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+const GET_AMOUNT = 6;
+
+const Home: FC = () => {
+  const [searchTokenId, setSearchTokenId] = useState<number>(0);
+  const [totalNFT, setTotalNFT] = useState<number>(0);
   const [metadataArray, setMetadataArray] = useState<NftMetadata[]>([]);
 
-  const { mintNftContract, account } = useOutletContext<OutletContext>();
+  const { mintNftContract } = useOutletContext<OutletContext>();
 
-  const onClickMintModal = () => {
-    if (!account) return;
+  const getTotalSupply = async () => {
+    try {
+      if (!mintNftContract) return;
 
-    setIsOpen(true);
+      const totalSupply = await mintNftContract.methods.totalSupply().call();
+
+      setSearchTokenId(Number(totalSupply));
+      setTotalNFT(Number(totalSupply));
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const getMyNFTs = async () => {
+  const getNFTs = async () => {
     try {
-      if (!mintNftContract || !account) return;
-
-      // @ts-expect-error
-      const balance = await mintNftContract.methods.balanceOf(account).call();
+      if (!mintNftContract) return;
 
       let temp: NftMetadata[] = [];
 
-      for (let i = 0; i < Number(balance); i++) {
-        const tokenId = await mintNftContract.methods
-          // @ts-expect-error
-          .tokenOfOwnerByIndex(account, i)
-          .call();
-
+      for (let i = 0; i < GET_AMOUNT; i++) {
         const metadataURI: string = await mintNftContract.methods
           // @ts-expect-error
-          .tokenURI(Number(tokenId))
+          .tokenURI(searchTokenId - i)
           .call();
 
         const response = await axios.get(metadataURI);
 
-        temp.push({ ...response.data, tokenId: Number(tokenId) });
+        temp.push({ ...response.data, tokenId: searchTokenId });
       }
 
+      setSearchTokenId(searchTokenId - GET_AMOUNT);
       setMetadataArray(temp);
     } catch (error) {
       console.error(error);
@@ -49,42 +51,24 @@ const My: FC = () => {
   };
 
   useEffect(() => {
-    getMyNFTs();
-  }, [mintNftContract, account]);
+    getTotalSupply();
+  }, [mintNftContract]);
 
-  useEffect(() => console.log(metadataArray), [metadataArray]);
+  useEffect(() => {
+    if (totalNFT === 0) return;
+
+    getNFTs();
+  }, [totalNFT]);
 
   return (
-    <>
-      <div className="grow">
-        <div className="text-right p-2">
-          <button className="hover:text-gray-500" onClick={onClickMintModal}>
-            Mint
-          </button>
-        </div>
-        <div className="text-center py-8">
-          <h1 className="font-bold text-2xl">My NFTs</h1>
-        </div>
-        <ul className="p-8 grid grid-cols-2 gap-8">
-          {metadataArray?.map((v, i) => (
-            <MyNftCard
-              key={i}
-              image={v.image}
-              name={v.name}
-              tokenId={v.tokenId!}
-            />
-          ))}
-        </ul>
-      </div>
-      {isOpen && (
-        <MintModal
-          setIsOpen={setIsOpen}
-          metadataArray={metadataArray}
-          setMetadataArray={setMetadataArray}
-        />
-      )}
-    </>
+    <div className="grow bg-green-100">
+      <ul className="p-8 grid grid-cols-2 gap-8">
+        {metadataArray?.map((v, i) => (
+          <NftCard key={i} image={v.image} name={v.name} tokenId={v.tokenId!} />
+        ))}
+      </ul>
+    </div>
   );
 };
 
-export default My;
+export default Home;
