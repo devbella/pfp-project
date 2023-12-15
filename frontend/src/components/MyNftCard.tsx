@@ -25,7 +25,7 @@ const MyNftCard: FC<MyNftCardProps> = ({
 
       if (isNaN(+price)) return;
 
-      const response = await saleNftContract.methods
+      await saleNftContract.methods
         .setForSaleNFT(
           // @ts-expect-error
           MINT_NFT_CONTRACT,
@@ -34,7 +34,8 @@ const MyNftCard: FC<MyNftCardProps> = ({
         )
         .send({ from: account });
 
-      console.log(response);
+      setRegistedPrice(+price);
+      setPrice("");
     } catch (error) {
       console.error(error);
     }
